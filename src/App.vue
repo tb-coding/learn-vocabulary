@@ -149,6 +149,8 @@ import AddVocabDialog from '@/components/AddVocabDialog.vue'
 import StatsPanel from '@/components/StatsPanel.vue'
 import SeedDataLoader from '@/components/SeedDataLoader.vue'
 
+defineOptions({ name: 'App' })
+
 const store = useVocabStore()
 const {
   loadingProgress,
@@ -221,6 +223,14 @@ async function handleResetSeedData() {
   showResetWarning.value = false
   showSettings.value = false
   showSeedLoader.value = true
-  await reloadSeedData()
+  
+  try {
+    await reloadSeedData()
+  } catch (err) {
+    showSeedLoader.value = false
+    const errorMessage = err instanceof Error ? err.message : 'An error occurred while loading seed data'
+    showSnackbar(`Error: ${errorMessage}`, 'error')
+    console.error('Failed to reset seed data:', err)
+  }
 }
 </script>
