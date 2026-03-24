@@ -65,9 +65,19 @@ export function getDifficultyDistribution() {
   return DIFFICULTY_DISTRIBUTION
 }
 
+const REQUEST_TIMEOUT_MS = 10000 // 10 seconds timeout
+
 export async function fetchWordDetails(word: string): Promise<SeedWordDetail | null> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+
   try {
-    const response = await fetch(`${API_BASE}/${encodeURIComponent(word)}`)
+    const response = await fetch(`${API_BASE}/${encodeURIComponent(word)}`, {
+      signal: controller.signal
+    })
+    
+    clearTimeout(timeoutId)
+    
     if (!response.ok) {
       return null
     }
@@ -120,7 +130,11 @@ export async function fetchWordDetails(word: string): Promise<SeedWordDetail | n
       examples,
       synonyms
     }
-  } catch {
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.warn(`Request timeout for word: ${word}`)
+    }
     return null
   }
 }
