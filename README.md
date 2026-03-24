@@ -20,7 +20,6 @@
 - **前端框架**: Vue 3 (Composition API)
 - **UI 元件庫**: Vuetify 4
 - **狀態管理**: Pinia
-- **路由**: Vue Router 5
 - **建構工具**: Vite 8
 - **開發語言**: TypeScript
 
@@ -97,12 +96,18 @@ learn-vocabulary/
 ### 單字卡片格式
 
 ```typescript
-interface Vocab {
-  id: string;           // 唯一識別碼
+interface Vocabulary {
+  id: string;           // 唯一識別碼 (UUID)
   word: string;         // 單字
-  partOfSpeech: string; // 詞性 (n., v., adj., adv.)
-  definition: string;     // 定義
-  example: string;        // 例句
+  definition: string;   // 定義
+  tags: string[];       // 標籤（如類別、難度）
+  createdAt: number;    // 建立時間戳記
+  correctCount: number; // 正確次數
+  incorrectCount: number; // 錯誤次數
+  source?: 'user' | 'api' | 'fallback'; // 來源
+  phonetic?: string;    // 音標
+  examples?: string[];  // 例句
+  synonyms?: string[];  // 同義詞
 }
 ```
 
@@ -113,9 +118,9 @@ interface Vocab {
   "words": [
     {
       "word": "example",
-      "partOfSpeech": "n.",
       "definition": "範例",
-      "example": "This is an example."
+      "category": "general",
+      "difficulty": "easy"
     }
   ]
 }
@@ -127,17 +132,31 @@ interface Vocab {
 
 ### 資料儲存
 
-- 單字資料儲存在 LocalStorage 的 `vocab-data` 鍵中
+- 單字資料儲存在 LocalStorage 的 `vocab-app-data` 鍵中
 - 種子資料為靜態 JSON 檔案，放置於 `src/data/` 目錄
 
 ### 狀態管理
 
 使用 Pinia 管理單字狀態，包含：
-- `vocabList`: 單字列表
-- `loading`: 載入狀態
-- `addVocab()`: 新增單字
-- `removeVocab()`: 刪除單字
-- `loadSeedData()`: 載入種子資料
+- `vocabulary`: 單字列表
+- `stats`: 學習統計
+- `addWord()`: 新增單字
+- `addWordFromSeed()`: 從種子資料新增單字
+- `updateWord()`: 更新單字
+- `deleteWord()`: 刪除單字
+- `clearVocabulary()`: 清空單字
+- `generateQuizQuestions()`: 生成測驗題目
+- `recordQuizResult()`: 記錄測驗結果
+
+### 單元測試
+
+```bash
+# 執行測試
+npm run test
+
+# 執行測試（不監聽模式）
+npm run test:run
+```
 
 ---
 
