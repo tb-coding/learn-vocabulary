@@ -45,7 +45,7 @@ export function useSeedData() {
       })
 
       const vocabItems = words.map((word: SeedWordDetail) => ({
-        id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+        id: crypto.randomUUID(),
         word: word.word,
         definition: word.definition || `${word.partOfSpeech || 'word'}: ${word.synonyms?.join(', ') || 'common vocabulary'}`,
         tags: [word.category, word.difficulty],
@@ -74,7 +74,7 @@ export function useSeedData() {
 
       const fallbackWords = getSeedWords()
       const vocabItems = fallbackWords.map((word) => ({
-        id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+        id: crypto.randomUUID(),
         word: word.word,
         definition: word.definition,
         tags: [word.category, word.difficulty],
