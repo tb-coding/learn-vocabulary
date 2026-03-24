@@ -29,6 +29,151 @@ A Vue 3 + Vite + Vuetify vocabulary learning application with quiz functionality
    - Export/Import JSON
    - Sample data for testing
 
+### NEW: Seed Data Generation (v1.1.0)
+
+#### Feature Description
+Automatically generate 100 common daily life vocabulary words from online dictionaries to provide immediate value for new users.
+
+#### Data Structure
+```typescript
+interface SeedVocabulary {
+  id: string;
+  word: string;
+  definition: string;
+  partOfSpeech: 'noun' | 'verb' | 'adjective' | 'adverb';
+  example: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  tags: string[];
+  source: string; // API source
+}
+
+interface SeedDataConfig {
+  totalWords: 100;
+  categories: {
+    food: number;      // 20 words
+    travel: number;    // 20 words
+    work: number;      // 20 words
+    emotions: number;  // 15 words
+    daily: number;     // 15 words
+    technology: number; // 10 words
+  };
+  difficultyDistribution: {
+    easy: 40;    // 40%
+    medium: 45;  // 45%
+    hard: 15;    // 15%
+  };
+}
+```
+
+#### Word Categories & Examples
+
+**Food (20 words)**
+- Easy: apple, bread, water, coffee, rice
+- Medium: ingredient, cuisine, beverage, dessert, recipe
+- Hard: gastronomy, appetizer, confectionery, condiment, palate
+
+**Travel (20 words)**
+- Easy: trip, hotel, map, ticket, airport
+- Medium: itinerary, destination, accommodation, excursion, reservation
+- Hard: itinerary, embarkation, disembarkation, concierge, sightseeing
+
+**Work (20 words)**
+- Easy: job, office, meeting, email, report
+- Medium: deadline, colleague, presentation, schedule, conference
+- Hard: negotiation, collaboration, administration, productivity, delegation
+
+**Emotions (15 words)**
+- Easy: happy, sad, angry, tired, excited
+- Medium: anxious, grateful, frustrated, confident, disappointed
+- Hard: melancholy, euphoria, apprehensive, overwhelmed, contentment
+
+**Daily Life (15 words)**
+- Easy: morning, evening, routine, chore, schedule
+- Medium: appointment, errand, maintenance, organization, preparation
+- Hard: punctuality, responsibility, discipline, convenience, efficiency
+
+**Technology (10 words)**
+- Easy: phone, computer, internet, website, password
+- Medium: software, hardware, network, database, interface
+- Hard: algorithm, encryption, bandwidth, compatibility, authentication
+
+#### Implementation Plan
+
+##### Phase 1: Data Fetching (30 min)
+- Research Free Dictionary API (https://dictionaryapi.dev/)
+- Create seedDataGenerator.ts service
+- Implement API fetching with error handling
+- Add fallback word list for offline scenarios
+
+##### Phase 2: Data Processing (30 min)
+- Map API response to SeedVocabulary interface
+- Assign difficulty levels based on word frequency
+- Categorize words by tags
+- Generate unique IDs
+
+##### Phase 3: Integration (45 min)
+- Create SeedDataManager composable
+- Auto-populate on first app launch
+- Add "Reset to Seed Data" button in settings
+- Store seed data in public/seed-data.json
+
+##### Phase 4: Testing (15 min)
+- Verify all 100 words load correctly
+- Test categorization accuracy
+- Check difficulty distribution
+- Validate API fallback mechanism
+
+#### API Integration
+
+**Primary API**: Free Dictionary API
+```typescript
+// API Endpoint
+https://api.dictionaryapi.dev/api/v2/entries/en/{word}
+
+// Response Structure
+interface DictionaryAPIResponse {
+  word: string;
+  meanings: {
+    partOfSpeech: string;
+    definitions: {
+      definition: string;
+      example?: string;
+    }[];
+  }[];
+}
+```
+
+**Fallback Strategy**:
+- Maintain static JSON file with 100 pre-defined words
+- Use static data if API is unavailable
+- Allow manual import/export of seed data
+
+#### UI/UX Changes
+
+1. **Onboarding Screen**
+   - Show loading indicator while fetching seed data
+   - Display success message with word count
+   - Option to skip seed data
+
+2. **Vocabulary List**
+   - Add filter by source (seed/user)
+   - Tag-based filtering
+
+3. **Settings Panel**
+   - "Load Seed Data" button
+   - "Reset to Seed Data" option
+   - Export seed data as JSON
+
+#### Testing Checklist
+- [ ] All 100 words load successfully
+- [ ] Difficulty distribution matches spec (40/45/15)
+- [ ] Category distribution is correct
+- [ ] Words have complete data (word, definition, example, tags)
+- [ ] API error fallback works
+- [ ] localStorage persistence works
+- [ ] Quiz mode works with seed data
+- [ ] Reset functionality works
+
 ## Technical Architecture
 
 ### Project Structure
@@ -39,15 +184,17 @@ src/
 │   ├── VocabCard.vue       # Single word card
 │   ├── QuizMode.vue        # Quiz interface
 │   ├── AddVocabDialog.vue  # Add word dialog
-│   └── StatsPanel.vue      # Statistics display
+│   ├── StatsPanel.vue      # Statistics display
+│   └── SeedDataLoader.vue  # NEW: Seed data loading UI
 ├── composables/
 │   ├── useVocab.js         # Vocabulary management
 │   ├── useQuiz.js          # Quiz logic
-│   └── useStorage.js       # localStorage wrapper
-├── views/
-│   ├── HomeView.vue        # Main dashboard
-│   ├── VocabView.vue       # Vocabulary management
-│   └── QuizView.vue        # Quiz page
+│   ├── useStorage.js       # localStorage wrapper
+│   └── useSeedData.js      # NEW: Seed data management
+├── services/
+│   └── seedDataGenerator.ts # NEW: API integration
+├── data/
+│   └── seed-words.json     # NEW: Fallback word list
 ├── stores/
 │   └── vocabStore.js       # Pinia store
 ├── App.vue
@@ -61,6 +208,7 @@ src/
 - Search/filter functionality
 - Tag filtering
 - Edit/Delete actions
+- Filter by source (seed/user)
 
 #### QuizMode.vue
 - Question display
@@ -74,6 +222,13 @@ src/
 - Quiz accuracy percentage
 - Study streak counter
 - Words mastered count
+- Seed data statistics
+
+#### SeedDataLoader.vue (NEW)
+- Loading indicator
+- Progress bar (0-100 words)
+- Success/error states
+- Skip option
 
 ### Data Model
 ```typescript
@@ -86,6 +241,7 @@ interface Vocabulary {
   difficulty: 'easy' | 'medium' | 'hard';
   mastered: boolean;
   createdAt: Date;
+  source: 'seed' | 'user'; // NEW
 }
 
 interface QuizResult {
@@ -95,6 +251,13 @@ interface QuizResult {
   accuracy: number;
   completedAt: Date;
 }
+
+interface SeedDataState {
+  isLoading: boolean;
+  isLoaded: boolean;
+  wordCount: number;
+  error: string | null;
+}
 ```
 
 ### UI/UX Specifications
@@ -103,6 +266,7 @@ interface QuizResult {
 - Card-based layout
 - Smooth transitions (300ms)
 - Toast notifications for feedback
+- Loading skeletons for async operations
 
 ### Responsive Breakpoints
 - Mobile: < 600px
@@ -127,11 +291,19 @@ interface QuizResult {
 - Answer validation
 - Score tracking
 
-### Phase 4: Polish (1 hour)
+### Phase 4: NEW - Seed Data Feature (2 hours)
+- Implement seed data generator
+- Integrate Dictionary API
+- Build loading UI
+- Add reset functionality
+
+### Phase 5: Polish (1 hour)
 - Statistics dashboard
 - Animations
 - Error handling
 - Testing
 
 ---
-Estimated Total Time: 5 hours
+Estimated Total Time: 7 hours (including seed data feature)
+Version: 1.1.0
+Last Updated: 2026-03-24
