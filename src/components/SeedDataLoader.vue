@@ -89,6 +89,8 @@
 import { computed } from 'vue'
 import type { FetchProgress } from '@/services/seedDataGenerator'
 
+defineOptions({ name: 'SeedDataLoader' })
+
 interface Props {
   visible: boolean
   progress: FetchProgress

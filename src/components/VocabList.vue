@@ -46,6 +46,8 @@ import { ref, computed } from 'vue'
 import type { Vocabulary } from '@/types'
 import VocabCard from './VocabCard.vue'
 
+defineOptions({ name: 'VocabList' })
+
 const props = defineProps<{
   vocabulary: Vocabulary[]
 }>()

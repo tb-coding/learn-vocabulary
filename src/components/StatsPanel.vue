@@ -55,5 +55,7 @@
 <script setup lang="ts">
 import { useVocabStore } from '@/stores/vocabStore'
 
+defineOptions({ name: 'StatsPanel' })
+
 const store = useVocabStore()
 </script>

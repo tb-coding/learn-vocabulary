@@ -110,6 +110,8 @@ import { ref, computed } from 'vue'
 import { useVocabStore } from '@/stores/vocabStore'
 import type { QuizQuestion } from '@/types'
 
+defineOptions({ name: 'QuizMode' })
+
 const store = useVocabStore()
 
 const quizStarted = ref(false)

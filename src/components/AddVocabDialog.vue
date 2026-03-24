@@ -47,6 +47,8 @@
 import { ref, reactive, watch, computed } from 'vue'
 import type { Vocabulary } from '@/types'
 
+defineOptions({ name: 'AddVocabDialog' })
+
 const props = defineProps<{
   modelValue: boolean
   vocab?: Vocabulary | null

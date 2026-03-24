@@ -27,6 +27,8 @@
 <script setup lang="ts">
 import type { Vocabulary } from '@/types'
 
+defineOptions({ name: 'VocabCard' })
+
 defineProps<{
   vocab: Vocabulary
 }>()
