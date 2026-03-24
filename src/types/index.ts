@@ -6,6 +6,20 @@ export interface Vocabulary {
   createdAt: number
   correctCount: number
   incorrectCount: number
+  source?: 'user' | 'api' | 'fallback'
+  phonetic?: string
+  examples?: string[]
+  synonyms?: string[]
+}
+
+export interface SeedVocabularyInput {
+  word: string
+  definition: string
+  tags: string[]
+  source: 'api' | 'fallback'
+  phonetic?: string
+  examples?: string[]
+  synonyms?: string[]
 }
 
 export interface QuizQuestion {

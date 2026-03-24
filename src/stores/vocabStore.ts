@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Vocabulary, QuizQuestion, Stats } from '@/types'
+import type { Vocabulary, QuizQuestion, Stats, SeedVocabularyInput } from '@/types'
 
 const STORAGE_KEY = 'vocab-app-data'
 
@@ -46,7 +46,7 @@ export const useVocabStore = defineStore('vocab', () => {
     }))
   }
 
-  function addWord(word: string, definition: string, tags: string[]) {
+  function addWord(word: string, definition: string, tags: string[], source: Vocabulary['source'] = 'user') {
     const newVocab: Vocabulary = {
       id: generateId(),
       word,
@@ -54,7 +54,28 @@ export const useVocabStore = defineStore('vocab', () => {
       tags,
       createdAt: Date.now(),
       correctCount: 0,
-      incorrectCount: 0
+      incorrectCount: 0,
+      source
+    }
+    vocabulary.value.push(newVocab)
+    stats.value.totalWords = vocabulary.value.length
+    saveToStorage()
+    return newVocab
+  }
+
+  function addWordFromSeed(input: SeedVocabularyInput) {
+    const newVocab: Vocabulary = {
+      id: generateId(),
+      word: input.word,
+      definition: input.definition,
+      tags: input.tags,
+      createdAt: Date.now(),
+      correctCount: 0,
+      incorrectCount: 0,
+      source: input.source,
+      phonetic: input.phonetic,
+      examples: input.examples,
+      synonyms: input.synonyms
     }
     vocabulary.value.push(newVocab)
     stats.value.totalWords = vocabulary.value.length
@@ -73,6 +94,12 @@ export const useVocabStore = defineStore('vocab', () => {
   function deleteWord(id: string) {
     vocabulary.value = vocabulary.value.filter(v => v.id !== id)
     stats.value.totalWords = vocabulary.value.length
+    saveToStorage()
+  }
+
+  function clearVocabulary() {
+    vocabulary.value = []
+    stats.value.totalWords = 0
     saveToStorage()
   }
 
@@ -157,6 +184,18 @@ export const useVocabStore = defineStore('vocab', () => {
     return Math.round((stats.value.correctAnswers / total) * 100)
   })
 
+  const hasSeedData = computed(() => {
+    return vocabulary.value.some(v => v.source === 'api' || v.source === 'fallback')
+  })
+
+  const isFirstLaunch = computed(() => {
+    return vocabulary.value.length === 0
+  })
+
+  const seedWordCount = computed(() => {
+    return vocabulary.value.filter(v => v.source === 'api' || v.source === 'fallback').length
+  })
+
   // Initialize from storage
   loadFromStorage()
 
@@ -164,9 +203,14 @@ export const useVocabStore = defineStore('vocab', () => {
     vocabulary,
     stats,
     accuracyRate,
+    hasSeedData,
+    isFirstLaunch,
+    seedWordCount,
     addWord,
+    addWordFromSeed,
     updateWord,
     deleteWord,
+    clearVocabulary,
     getWord,
     updateWordStats,
     generateQuizQuestions,

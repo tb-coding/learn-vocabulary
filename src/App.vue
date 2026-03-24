@@ -5,6 +5,9 @@
         <v-icon icon="mdi-book-alphabet" class="mr-2" />
         Vocabulary Learning App
       </v-app-bar-title>
+      <v-btn icon variant="text" @click="showSettings = true">
+        <v-icon icon="mdi-cog" />
+      </v-btn>
     </v-app-bar>
 
     <v-main>
@@ -69,6 +72,66 @@
       @save="handleSave"
     />
 
+    <v-dialog v-model="showSettings" max-width="400">
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <v-icon icon="mdi-cog" class="mr-2" />
+          Settings
+        </v-card-title>
+        <v-card-text>
+          <v-list>
+            <v-list-item>
+              <template #prepend>
+                <v-icon icon="mdi-database" />
+              </template>
+              <v-list-item-title>Total Vocabulary</v-list-item-title>
+              <v-list-item-subtitle>{{ store.vocabulary.length }} words</v-list-item-subtitle>
+            </v-list-item>
+            <v-list-item v-if="store.seedWordCount > 0">
+              <template #prepend>
+                <v-icon icon="mdi-seed" />
+              </template>
+              <v-list-item-title>Seed Data</v-list-item-title>
+              <v-list-item-subtitle>{{ store.seedWordCount }} words loaded</v-list-item-subtitle>
+            </v-list-item>
+          </v-list>
+          <v-divider class="my-3" />
+          <v-btn
+            color="warning"
+            variant="outlined"
+            block
+            prepend-icon="mdi-refresh"
+            @click="handleResetSeedData"
+          >
+            Reset to Seed Data
+          </v-btn>
+          <v-alert
+            v-if="showResetWarning"
+            type="warning"
+            variant="tonal"
+            class="mt-3"
+            density="compact"
+          >
+            This will replace all your vocabulary with the seed data. This action cannot be undone.
+          </v-alert>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="showSettings = false; showResetWarning = false">
+            Close
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <SeedDataLoader
+      :visible="showSeedLoader"
+      :progress="loadingProgress"
+      :error="error"
+      :loaded-source="loadedSource"
+      @complete="handleSeedComplete"
+    />
+
     <v-snackbar v-model="snackbar" :color="snackbarColor" :timeout="2000">
       {{ snackbarText }}
     </v-snackbar>
@@ -76,15 +139,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useVocabStore } from '@/stores/vocabStore'
+import { useSeedData } from '@/composables/useSeedData'
 import type { Vocabulary } from '@/types'
 import VocabList from '@/components/VocabList.vue'
 import QuizMode from '@/components/QuizMode.vue'
 import AddVocabDialog from '@/components/AddVocabDialog.vue'
 import StatsPanel from '@/components/StatsPanel.vue'
+import SeedDataLoader from '@/components/SeedDataLoader.vue'
 
 const store = useVocabStore()
+const {
+  loadingProgress,
+  error,
+  loadedSource,
+  loadSeedData,
+  reloadSeedData
+} = useSeedData()
 
 const currentView = ref('list')
 const dialogVisible = ref(false)
@@ -93,6 +165,17 @@ const selectedVocab = ref<Vocabulary | null>(null)
 const snackbar = ref(false)
 const snackbarText = ref('')
 const snackbarColor = ref('success')
+
+const showSettings = ref(false)
+const showResetWarning = ref(false)
+const showSeedLoader = ref(false)
+
+onMounted(async () => {
+  if (store.isFirstLaunch) {
+    showSeedLoader.value = true
+    await loadSeedData()
+  }
+})
 
 function openAddDialog() {
   selectedVocab.value = null
@@ -123,5 +206,21 @@ function showSnackbar(text: string, color = 'success') {
   snackbarText.value = text
   snackbarColor.value = color
   snackbar.value = true
+}
+
+function handleSeedComplete() {
+  showSeedLoader.value = false
+  showSnackbar('Seed data loaded successfully!')
+}
+
+async function handleResetSeedData() {
+  if (!showResetWarning.value) {
+    showResetWarning.value = true
+    return
+  }
+  showResetWarning.value = false
+  showSettings.value = false
+  showSeedLoader.value = true
+  await reloadSeedData()
 }
 </script>
