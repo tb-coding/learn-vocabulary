@@ -30,12 +30,7 @@
       </div>
 
       <v-card variant="flat" class="mb-6 pa-6 bg-surface-variant">
-        <p class="text-h6">
-          {{ currentQuestion.type === 'word_to_definition'
-            ? `What is the definition of "${currentQuestion.question}"?`
-            : `Which word matches this definition?\n"${currentQuestion.question}"`
-          }}
-        </p>
+        <p class="text-h6" style="white-space: pre-line;" v-html="questionText" />
       </v-card>
 
       <v-btn-toggle
@@ -123,6 +118,13 @@ const correctCount = ref(0)
 const incorrectCount = ref(0)
 
 const currentQuestion = computed(() => questions.value[currentIndex.value])
+const questionText = computed(() => {
+  if (!currentQuestion.value) return ''
+  if (currentQuestion.value.type === 'word_to_definition') {
+    return `What is the definition of "${currentQuestion.value.question}"?`
+  }
+  return `Which word matches this definition?\n"${currentQuestion.value.question}"`
+})
 const accuracy = computed(() => {
   const total = correctCount.value + incorrectCount.value
   if (total === 0) return 0
