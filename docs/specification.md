@@ -304,6 +304,37 @@ interface SeedDataState {
 - Testing
 
 ---
+
+## Bug Fixes
+
+### Bug #1: 拼字遊戲頁面組件重疊問題 (v1.1.1)
+**Date:** 2026-03-25
+**Component:** QuizMode.vue
+**Severity:** Medium
+**Status:** Pending
+
+**Description:**
+在拼字遊戲頁面中，問題描述文字與選項按鈕出現組件重疊問題。經 Code Review 發現問題位於第 34-37 行的三元表達式中，模板字符串使用了 `\n` 作為換行符，導致在 Vue 模板的 `{{ }}` 表達式中渲染異常。
+
+**Root Cause:**
+```vue
+{{ currentQuestion.type === 'word_to_definition'
+  ? `What is the definition of "${currentQuestion.question}"?`
+  : `Which word matches this definition?\n"${currentQuestion.question}"`
+}}
+```
+模板字符串中的 `\n` 在 Vue 插值表達式中不會被正確解析為換行，導致 DOM 結構異常。
+
+**Fix Solution:**
+使用 Vue 的 `<br>` 標籤或 `v-html` 來處理多行文字，或將問題描述拆分為多個 DOM 元素。
+
+**Implementation:**
+- 使用 `<v-col>` 或 `<div>` 結構來正確佈局問題描述
+- 或使用 CSS `white-space: pre-line` 樣式
+
+**Estimated Time:** 15 min
+
+---
 Estimated Total Time: 7 hours (including seed data feature)
-Version: 1.1.0
-Last Updated: 2026-03-24
+Version: 1.1.1
+Last Updated: 2026-03-25
